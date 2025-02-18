@@ -228,6 +228,10 @@ with osmx.Transaction(env) as txn:
                         tag.set("v", next(it))
             else:
                 relation = relations.get(obj_id)
+                if not relation:
+                    # TODO: this guard avoids errors from the 'with' statement
+                    # like "AttributeError: __enter__ -:1.1: Document is empty"
+                    continue
                 with relation as relation:
                     for m in relation.members:
                         member = ET.SubElement(prev_version, "member")
