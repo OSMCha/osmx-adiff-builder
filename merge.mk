@@ -1,4 +1,4 @@
-#!/usr/bin/env make -f
+#!/usr/bin/make -f
 
 # Builds changeset augmented diffs from stage-data/split-adiffs/*/ and writes
 # them to bucket-data/*.adiff. Skips any output changeset that already exists
