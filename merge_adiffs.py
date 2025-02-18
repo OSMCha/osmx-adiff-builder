@@ -51,7 +51,9 @@ root.set("copyright", "OpenStreetMap and contributors")
 root.set("attribution", "http://www.openstreetmap.org/copyright")
 root.set("license", "http://opendatacommons.org/licenses/odbl/1-0/")
 
-root.append(changeset)
+if changeset:
+    root.append(changeset)
+
 for action in actions:
     root.append(action)
 
