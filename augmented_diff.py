@@ -529,7 +529,8 @@ for child in o:
     if child.tag == "action" and child.get("type") == "create":
         # child[0] is an empty <old> element, child[1] is a <new> element
         # which contains the created OSM element as _its_ only child
-        child[0] = child[1][0]
+        elem = child[1][0]
+        child[:] = [elem]
 
 eprint(f"Pass 7: {time.time() - pass_7_start_time:.3f}s")
 
