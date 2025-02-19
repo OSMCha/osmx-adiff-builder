@@ -7,9 +7,11 @@
 # - moves
 # - merges all split adiffs in each split-adiffs/*/ into one merged-adiffs/*.adiff
 
-LOCKFILE=/var/run/osmx-adiff-process.lock
-
-# flock -n $LOCKFILE || { echo "already running" && exit 0 }
+# NOTE: this is an implementation detail of how OSMCha's deployment of these scripts
+# works (the scripts are installed into /mnt/osmcha/bin). In your own deployment you
+# should ensure that the scripts (specifically split_adiff.py, merge_adiff.py, and
+# merge.mk) are in your $PATH, because process.sh assumes they are.
+export PATH=$PATH:/mnt/osmcha/bin
 
 for adiff_file in $(find stage-data/replication-adiffs/ -type f); do
   seqno=$(basename -s .adiff $adiff_file)
