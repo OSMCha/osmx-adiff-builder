@@ -10,6 +10,10 @@ import sys
 
 input_files = sys.argv[1:]
 
+if not input_files:
+    print("Error: no input files to merge", file=sys.stderr)
+    exit(2)
+
 # TODO: this would hugely benefit from a happy-path optimization
 # that simply copies the input file to the output path if there's
 # only one input. That case will be true for the huge majority of
