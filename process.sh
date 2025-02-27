@@ -44,4 +44,5 @@ done
 # changesets whose set of input (split-adiffs/) files haven't changed.
 merge.mk
 
-
+# clean up old stage-data that we don't need anymore
+gc.sh
