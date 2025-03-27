@@ -315,15 +315,19 @@ with osmx.Transaction(env) as txn:
                 way = actions["way/" + ref]
                 for child in way.element:
                     if child.tag == "nd":
-                        ll = get_lat_lon(child.get("ref"), use_new)
+                        ref = child.get("ref")
+                        ll = get_lat_lon(ref, use_new)
                         nd = ET.SubElement(mem, "nd")
+                        nd.set("ref", ref)
                         nd.set("lon", ll[0])
                         nd.set("lat", ll[1])
             else:
                 with ways.get(ref) as way:
                     for node_id in way.nodes:
-                        ll = get_lat_lon(str(node_id), use_new)
+                        ref = str(node_id)
+                        ll = get_lat_lon(ref, use_new)
                         nd = ET.SubElement(mem, "nd")
+                        nd.set("ref", ref)
                         nd.set("lon", ll[0])
                         nd.set("lat", ll[1])
         elif mem.get("type") == "node":
