@@ -42,9 +42,9 @@ Output files from the merge process can be copied to another location or uploade
 
 The state of the system described above is managed through the filesystem. Replication files are downloaded into `stage-data/replication/minute/` by `update.sh`, and then deleted by `process.sh` once they're no longer needed. Split files are placed in `stage-data/split-adiffs/<changeset_id>/`, so that `merge.mk` knows which sets of split files have changed and can re-merge them. The final merged files are moved to `bucket-data/changesets/<changesed_id>.adiff`, where they are uploaded to cloud storage and then deleted.
 
-## `adiffs.osmcha.org`
+## [adiffs.osmcha.org](https://adiffs.osmcha.org)
 
-The augmented diffs produced by this process are available over HTTPS at `adiffs.osmcha.org`.
+The augmented diffs produced by this process are available over HTTPS at [adiffs.osmcha.org](https://adiffs.osmcha.org).
 
 Changeset-aligned adiffs are found at `https://adiffs.osmcha.org/changesets/<changeset_id>.adiff`. For example: https://adiffs.osmcha.org/changesets/160415129.adiff . Changeset-aligned adiffs contain the complete set of changes for a specific changeset, and are useful for visualizing or analyzing a given changeset.
 
