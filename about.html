@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>adiffs.osmcha.org - augmented diff service for OpenStreetMap changesets</title>
+<style>
+body {
+  max-width: 800px;
+  margin: 0 auto;
+}
+</style>
+</head>
+
+<body>
+<h1><code>adiffs.osmcha.org</code></h1>
+
+<p>
+This is a web service providing <a href="https://wiki.openstreetmap.org/wiki/Overpass_API/Augmented_Diffs">
+augmented diffs</a> for <a href="https://www.openstreetmap.org/about">OpenStreetMap</a> <a href="https://wiki.openstreetmap.org/wiki/Changeset">changesets</a>.
+An <i>augmented diff</i> is an XML file that describes the edits performed in a particular changeset.
+Unlike the <a href="https://wiki.openstreetmap.org/wiki/OsmChange">osmChange</a> format used by the
+<a href="https://wiki.openstreetmap.org/wiki/API_v0.6">openstreetmap.org API</a>, augmented diffs
+contain both the old and new versions of modified elements, and are augmented (hence the name) with
+additional context about related elements, like parent ways of modified nodes or members of modified relations.
+</p>
+
+<h2>How to use</h2>
+
+<p>Changeset-aligned adiffs are found at
+<b><code>https://adiffs.osmcha.org/changesets/&lt;CHANGESET_ID&gt;.adiff</code></b>. For example:
+<a href="https://adiffs.osmcha.org/changesets/160415129.adiff">https://adiffs.osmcha.org/changesets/160415129.adiff</a>. Changeset-aligned adiffs contain the complete
+set of changes for a specific changeset, and are useful for visualizing or analyzing a given
+changeset.</p>
+<p>Replication-aligned adiffs are also available at
+<b><code>https://adiffs.osmcha.org/replication/minute/&lt;SEQNO&gt;.adiff</code></b>. For example:
+<a href="https://adiffs.osmcha.org/replication/minute/6429815.adiff">https://adiffs.osmcha.org/replication/minute/6429815.adiff</a> (which corresponds to
+<a href="https://planet.openstreetmap.org/replication/minute/006/449/815.osc.gz">https://planet.openstreetmap.org/replication/minute/006/449/815.osc.gz</a>). Replication-aligned adiffs
+contain changes from many different changesets which occurred during the same minute, and may not
+contain complete changesets, so they are likely to only be useful for specialized purposes.</p>
+
+<h2>Availability</h2>
+
+<p>
+This service was developed to support <a href="https://osmcha.org">OSMCha</a>, a changeset viewer
+and validation tool for OpenStreetMap. OSMCha is a Charter Project of <a href="https://openstreetmap.us/">OpenStreetMap US</a>,
+a 501(c)(3) nonprofit organization that aims to grow and support the OpenStreetMap community in the United States and beyond.
+OpenStreetMap US provides financial support for OSMCha development and infrastructure.
+</p>
+
+<p>The <code>adiffs.osmcha.org</code> service is free to use for low-volume noncommercial purposes.
+If you would like to build an application which depends on the service or make high-volume use of
+it, please contact <code>team at openstreetmap dot us</code> about the Community Projects program or
+Organizational Membership.</p>
+
+<h2>License</h2>
+
+<p>
+Data from the OpenStreetMap project is licensed under <a href="https://opendatacommons.org/licenses/odbl/">ODbL</a>.
+This includes data from <a href="https://www.openstreetmap.org/">openstreetmap.org</a> and
+<a href="https://planet.openstreetmap.org/">planet.openstreetmap.org</a>. It also includes data
+provided by the <code>adiffs.osmcha.org</code> service.
+</p>
+</body>
+</html>
