@@ -50,6 +50,9 @@ Changeset-aligned adiffs are found at `https://adiffs.osmcha.org/changesets/<cha
 
 Replication-aligned adiffs are also available at `https://adiffs.osmcha.org/replication/minute/<seqno.adiff>`. For example: https://adiffs.osmcha.org/replication/minute/6429815.adiff (which corresponds to https://planet.openstreetmap.org/replication/minute/006/449/815.osc.gz). Replication-aligned adiffs contain changes from many different changesets which occurred during the same minute, and may not contain complete changesets, so they are likely to only be useful for specialized purposes.
 
+> [!NOTE]
+> Augmented diff files are currently available only for changesets created after about 2024-11-26. There are plans to backfill data for older changesets eventually ([see here](https://github.com/OSMCha/osmx-adiff-builder/issues/3)).
+
 The `adiffs.osmcha.org` service is free to use for low-volume noncommercial purposes. If you would like to build an application which depends on the service or make high-volume use of it, please contact `team at openstreetmap dot us` about the Community Projects program or Organizational Membership.
 
 ## License
