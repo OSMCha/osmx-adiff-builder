@@ -12,7 +12,7 @@
 # to use flock to ensure that only one instance of the job is running at a time.
 
 set -ex
-export PATH=$PATH:/home/osmx/osmx-adiff-builder
+export PATH=$PATH:/${PWD}
 
 eval "$(mise activate bash --shims)"
 
