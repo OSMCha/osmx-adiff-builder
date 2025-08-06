@@ -16,7 +16,13 @@ export PATH=$PATH:/${PWD}
 
 eval "$(mise activate bash --shims)"
 
-osm replication minute --seqno $(osmx query $1 seqnum) \
+if [ -n "$INITIAL_SEQNUM" ]; then
+  seqno_start="$INITIAL_SEQNUM"
+else
+  seqno_start="$(osmx query "$1" seqnum)"
+fi
+
+osm replication minute --seqno $seqno_start \
   | while read seqno timestamp url; do
   test -z "$seqno" && continue # skip blank lines or empty output
 
