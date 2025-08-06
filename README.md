@@ -55,6 +55,19 @@ Replication-aligned adiffs are also available at `https://adiffs.osmcha.org/repl
 
 The `adiffs.osmcha.org` service is free to use for low-volume noncommercial purposes. If you would like to build an application which depends on the service or make high-volume use of it, please contact `team at openstreetmap dot us` about the Community Projects program or Organizational Membership.
 
+## Installation and dependencies
+
+You can "install" this software by cloning this repository and running the scripts in it directly. They expect the following dependencies to be available:
+
+- [`osm-cli`](https://github.com/jake-low/osm-cli) for locating replication files
+- `curl` for downloading replication files
+- a recent Python (tested on 3.13)
+- GNU Make
+- the `osmx` binary from [OSMExpress](https://github.com/bdon/OSMExpress)
+- `rclone` for uploading generated adiffs to cloud storage
+
+The scripts in this repository are best treated as a blueprint. If you deploy your own version of osmx-adiff-builder, you will likely want to modify them to customize the behavior for your purposes.
+
 ## License
 
 Unless otherwise noted, the files in this repository are marked under [CC0 1.0](https://creativecommons.org/publicdomain/zero/1.0/) and dedicated to the public domain.
