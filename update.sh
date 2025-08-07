@@ -11,17 +11,13 @@
 # should run this script in a cron job once per minute. It is good practice
 # to use flock to ensure that only one instance of the job is running at a time.
 
-set -ex
+set -e
 export PATH=$PATH:/${PWD}
 
-WORKDIR=/data
-DEFAULT_OSMX_DB_PATH=$WORKDIR/db/osmx.db
-DEFAULT_REPLICATION_ADIFFS=$WORKDIR/stage-data/replication-adiffs
-
-## Use $1 or s2 if passed, else default
-OSMX_DB_PATH="${1:-$DEFAULT_OSMX_DB_PATH}"
-REPLICATION_ADIFFS="${2:-$DEFAULT_REPLICATION_ADIFFS}"
-mkdir -p $REPLICATION_ADIFFS
+## Initial sequence number — this is only required at the beginning. right after the osmx database is created
+OSMX_DB_PATH=$1
+REPLICATION_ADIFFS_DIR=$2
+INITIAL_SEQNUM=$3
 
 eval "$(mise activate bash --shims)"
 
@@ -39,7 +35,7 @@ osm replication minute --seqno $seqno_start \
   tmpfile=$(mktemp)
 
   augmented_diff.py $OSMX_DB_PATH $seqno.osc | xmlstarlet format > $tmpfile
-  mv $tmpfile $REPLICATION_ADIFFS/$seqno.adiff
+  mv $tmpfile $REPLICATION_ADIFFS_DIR/$seqno.adiff
 
   osmx update $OSMX_DB_PATH $seqno.osc $seqno $timestamp --commit
   rm $seqno.osc

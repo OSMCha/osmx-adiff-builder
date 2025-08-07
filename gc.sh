@@ -6,9 +6,10 @@
 # The openstreetmap.org server automatically closes changesets after 24h,
 # so if a changeset hasn't been modified in at least that long, we can
 # safely assume that it won't change again in the future.
-WORKDIR=/data
-CHANGESET_DIR=$WORKDIR/stage-data/changesets
-SPLIT_ADIFFS=$WORKDIR/stage-data/split-adiffs
+
+SPLIT_ADIFFS_DIR=${1:-'stage-data/split-adiffs'}
+CHANGESET_DIR=${2:-'stage-data/changesets'}
+
 
 find "$CHANGESET_DIR" -type f -name "*.adiff.md5" -mtime +3 | while read stampfile; do
   changeset_id=$(basename "$stampfile" .adiff.md5)
@@ -17,9 +18,9 @@ find "$CHANGESET_DIR" -type f -name "*.adiff.md5" -mtime +3 | while read stampfi
   # them (prevents merge_adiffs.py being run during the deletion, which could
   # result in an incomplete adiff being generated)
   tmpdir=$(mktemp -d)
-  mv $SPLIT_ADIFFS/$changeset_id/ $tmpdir
+  mv $SPLIT_ADIFFS_DIR/$changeset_id/ $tmpdir
   rm -rf $tmpdir
 
   # also delete the stamp file
-  rm $CHANGESET_DIR//$changeset_id.adiff.md5
+  rm $CHANGESET_DIR/$changeset_id.adiff.md5
 done

@@ -8,13 +8,10 @@
 .ONESHELL:
 .SECONDEXPANSION:
 
-
-WORKDIR := /data
+SPLIT_ADIFFS_DIR ?= stage-data/split-adiffs
+CHANGESET_DIR ?= stage-data/changesets
+BUCKET_DIR ?= bucket-data/replication/minute
 API_URL ?= https://api.openstreetmap.org
-
-SPLIT_DIR := $(WORKDIR)/stage-data/split-adiffs
-CHANGESET_DIR := $(WORKDIR)/stage-data/changesets
-BUCKET_DIR := $(WORKDIR)/bucket-data/changesets
 
 
 MAKEDIR := $(dir $(realpath $(lastword $(MAKEFILE_LIST))))
@@ -22,10 +19,10 @@ MAKEDIR := $(dir $(realpath $(lastword $(MAKEFILE_LIST))))
 # all: metadatas changesets
 all: changesets
 
-changesets: $(shell find $(SPLIT_DIR) -mindepth 1 -type d | sed 's|$(SPLIT_DIR)|$(CHANGESET_DIR)|g' | sed 's|$$|.adiff.md5|')
+changesets: $(shell find $(SPLIT_ADIFFS_DIR)/ -mindepth 1 -type d | sed 's|$(SPLIT_ADIFFS_DIR)|$(CHANGESET_DIR)/|g' | sed 's|$$|.adiff.md5|')
 
 # bucket-data/changesets/%.adiff: $$(wildcard stage-data/split-adiffs/%/*)
-$(CHANGESET_DIR)/%.adiff.md5: $$(wildcard $(SPLIT_DIR)/%/*)
+$(CHANGESET_DIR)/%.adiff.md5: $$(wildcard $(SPLIT_ADIFFS_DIR)/%/*)
 	tmpfile=$$(mktemp)
 	python merge_adiffs.py $^ | xmlstarlet format > $$tmpfile
 	if [ -s $$tmpfile ]; then
@@ -39,7 +36,7 @@ $(CHANGESET_DIR)/%.adiff.md5: $$(wildcard $(SPLIT_DIR)/%/*)
 		mv $$tmpfile.gz $(BUCKET_DIR)/$*.adiff && rm $$tmpfile
 	fi
 
-metadatas: $(shell find $(SPLIT_DIR)/ -mindepth 1 -type d | sed 's|$$|/metadata.xml|')
+metadatas: $(shell find $(SPLIT_ADIFFS_DIR)/ -mindepth 1 -type d | sed 's|$$|/metadata.xml|')
 
-$(SPLIT_DIR)/%/metadata.xml:
+$(SPLIT_ADIFFS_DIR)/%/metadata.xml:
 	curl -sL "$(API_URL)/api/0.6/changeset/$*" -o $@
