@@ -8,17 +8,23 @@
 .ONESHELL:
 .SECONDEXPANSION:
 
+SPLIT_ADIFFS_DIR ?= stage-data/split-adiffs
+CHANGESET_DIR ?= stage-data/changesets
+BUCKET_DIR ?= bucket-data/replication/minute
+API_URL ?= https://api.openstreetmap.org
+
+
 MAKEDIR := $(dir $(realpath $(lastword $(MAKEFILE_LIST))))
 
 # all: metadatas changesets
 all: changesets
 
-changesets: $(shell find stage-data/split-adiffs/ -mindepth 1 -type d -printf 'stage-data/changesets/%P.adiff.md5\n')
+changesets: $(shell find $(SPLIT_ADIFFS_DIR)/ -mindepth 1 -type d | sed 's|$(SPLIT_ADIFFS_DIR)|$(CHANGESET_DIR)/|g' | sed 's|$$|.adiff.md5|')
 
 # bucket-data/changesets/%.adiff: $$(wildcard stage-data/split-adiffs/%/*)
-stage-data/changesets/%.adiff.md5: $$(wildcard stage-data/split-adiffs/%/*)
+$(CHANGESET_DIR)/%.adiff.md5: $$(wildcard $(SPLIT_ADIFFS_DIR)/%/*)
 	tmpfile=$$(mktemp)
-	merge_adiffs.py $^ | xmlstarlet format > $$tmpfile
+	python merge_adiffs.py $^ | xmlstarlet format > $$tmpfile
 	if [ -s $$tmpfile ]; then
 		# merge_adiffs.py can fail if it is given no input files or if one or more
 		# of its input files are not found. Either of these can happen if the input
@@ -27,10 +33,10 @@ stage-data/changesets/%.adiff.md5: $$(wildcard stage-data/split-adiffs/%/*)
 		# stamp file if the merged output file is nonempty (-s).
 		md5sum < $$tmpfile > $@
 		gzip -c < $$tmpfile > $$tmpfile.gz
-		mv $$tmpfile.gz bucket-data/changesets/$*.adiff && rm $$tmpfile
+		mv $$tmpfile.gz $(BUCKET_DIR)/$*.adiff && rm $$tmpfile
 	fi
 
-metadatas: $(shell find stage-data/split-adiffs/ -mindepth 1 -type d -printf '%p/metadata.xml\n')
+metadatas: $(shell find $(SPLIT_ADIFFS_DIR)/ -mindepth 1 -type d | sed 's|$$|/metadata.xml|')
 
-stage-data/split-adiffs/%/metadata.xml:
-	curl -sL https://api.openstreetmap.org/api/0.6/changeset/$* -o $@
+$(SPLIT_ADIFFS_DIR)/%/metadata.xml:
+	curl -sL "$(API_URL)/api/0.6/changeset/$*" -o $@
