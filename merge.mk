@@ -24,7 +24,7 @@ changesets: $(shell find $(SPLIT_ADIFFS_DIR)/ -mindepth 1 -type d | sed 's|$(SPL
 # bucket-data/changesets/%.adiff: $$(wildcard stage-data/split-adiffs/%/*)
 $(CHANGESET_DIR)/%.adiff.md5: $$(wildcard $(SPLIT_ADIFFS_DIR)/%/*)
 	tmpfile=$$(mktemp)
-	python merge_adiffs.py $^ | xmlstarlet format > $$tmpfile
+	python merge_adiffs.py $^ > $$tmpfile
 	if [ -s $$tmpfile ]; then
 		# merge_adiffs.py can fail if it is given no input files or if one or more
 		# of its input files are not found. Either of these can happen if the input
