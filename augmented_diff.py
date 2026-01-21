@@ -498,7 +498,10 @@ for child in o:
         if nds:
             bounds = Bounds()
             for nd in nds:
-                bounds.add(float(nd.get("lon")), float(nd.get("lat")))
+                lon = nd.get("lon")
+                lat = nd.get("lat")
+                if lon is not None and lat is not None:
+                    bounds.add(float(nd.get("lon")), float(nd.get("lat")))
             osm_obj.insert(0, bounds.elem())
 
 eprint(f"Pass 5: {time.time() - pass_5_start_time:.3f}s")

@@ -8,115 +8,133 @@ Usage: split_adiff.py ADIFF_FILE OUTPUT_DIRECTORY
 import sys
 import time
 from collections import defaultdict
-import xml.etree.ElementTree as ET
 
-adiff_file = sys.argv[1]
-output_directory = sys.argv[2]
+from lxml import etree as ET
 
-# map from changeset ID to set of element IDs that belong in that changeset's adiff
-# (this will include both elements modified directly in that changeset, and also
-# parent elements of those modified elements if present). an element ID is a
-# tuple of (str, int) like ("way", 123456).
-changesets = defaultdict(set)
 
-start = time.time()
-adiff = ET.parse(adiff_file).getroot()
-print(f"{time.time() - start:.3f}s to parse input XML")
+def main():
+    adiff_file = sys.argv[1]
+    output_directory = sys.argv[2]
+    # Maps: changeset_id -> set of (type, id) tuples
+    changesets = defaultdict(set)
+    # Reverse index: (type, id) -> set of changeset_ids (for O(1) lookup)
+    elem_to_changesets = defaultdict(set)
 
-# collect elements that were directly modified in each changeset. every element
-# will get put into at most one changeset (or zero if it wasn't actually modified)
-start = time.time()
-for elem in adiff:
-    if elem.tag != "action":
-        continue
-    
-    action = elem
-    if action.get("type") == "create":
-        old = None
-        new = action[0]
-    else:
-        old = action[0][0]
-        new = action[1][0]
+    start = time.time()
 
-    if old and new and old.get("version") == new.get("version"):
-        # this is an unmodified element which is included in the adiff for
-        # context. we don't yet know which changeset it's relevant to, so skip
-        # it for now.
-        continue
-    
-    changeset = new.get("changeset")
-    changesets[changeset].add((new.tag, new.get("id")))
+    # Pass 1: identify modified elements and their changesets
+    context = ET.iterparse(adiff_file, events=("end",), tag="action")
+    for _, action in context:
+        action_type = action.get("type")
+        if action_type == "create":
+            new = action[0]
+            old = None
+        else:
+            old = action[0][0]
+            new = action[1][0]
 
-print(f"{time.time() - start:.3f}s to group changed elements by changeset ID")
+        # Skip context elements (unmodified)
+        if old is not None and new is not None and old.get("version") == new.get("version"):
+            action.clear()
+            continue
 
-# collect context elements for each changeset. an element may end up in more
-# than one changeset if it happens to have a child that was modified multiple
-# times, or several children that were each modified in different changesets
-start = time.time()
-for elem in adiff:
-    if elem.tag != "action":
-        continue
-    
-    action = elem
-    if action.get("type") == "create":
-        old = None
-        new = action[0]
-    else:
-        old = action[0][0]
-        new = action[1][0]
+        changeset = new.get("changeset")
+        elem_id = (new.tag, new.get("id"))
+        changesets[changeset].add(elem_id)
+        elem_to_changesets[elem_id].add(changeset)
 
-    for elem in filter(lambda e: e is not None, [old, new]):
-        if elem.tag == "way":
-            way_nodes = set([("node", child.get("ref")) for child in elem if child.tag == "nd"])
-            for changeset_id, elem_ids in changesets.items():
-                if elem_ids & way_nodes:
-                    # print(f"adding context way {elem.get('id')} to changeset {changeset_id}")
-                    elem_ids.add(("way", elem.get("id")))
+        action.clear()
 
-        if elem.tag == "relation":
-            rel_members = set([(child.get("type"), child.get("ref")) for child in elem if child.tag == "member"])
-            for changeset_id, elem_ids in changesets.items():
-                if elem_ids & rel_members:
-                    elem_ids.add(("relation", elem.get("id")))
+    del context
+    print(f"{time.time() - start:.3f}s to identify modified elements (pass 1)")
 
-print(f"{time.time() - start:.3f}s to assign context elements to changesets")
+    # Pass 2: collect context elements using the reverse index
+    start = time.time()
 
-# Build a dictionary mapping changeset IDs to lists of XML <action> elements
-# borrowed from the input XML tree.
-start = time.time()
-changeset_elems = defaultdict(list)
-for elem in adiff:
-    if elem.tag != "action":
-        continue
-    
-    action = elem
-    if action.get("type") == "create":
-        old = None
-        new = action[0]
-    else:
-        old = action[0][0]
-        new = action[1][0]
+    context = ET.iterparse(adiff_file, events=("end",), tag="action")
+    for _, action in context:
+        action_type = action.get("type")
+        if action_type == "create":
+            new = action[0]
+            old = None
+        else:
+            old = action[0][0]
+            new = action[1][0]
 
-    id = (new.tag, new.get("id"))
+        for elem in (old, new):
+            if elem is None:
+                continue
 
-    for changeset_id, elem_ids in changesets.items():
-        if id in elem_ids:
-            changeset_elems[changeset_id].append(action)
+            elem_tag = elem.tag
+            if elem_tag == "way":
+                elem_id_str = elem.get("id")
+                for child in elem:
+                    if child.tag == "nd":
+                        node_id = ("node", child.get("ref"))
+                        cs_set = elem_to_changesets.get(node_id)
+                        if cs_set:
+                            way_id = ("way", elem_id_str)
+                            for cs_id in cs_set:
+                                changesets[cs_id].add(way_id)
+                                elem_to_changesets[way_id].add(cs_id)
 
-print(f"{time.time() - start:.3f}s to build action lists for each changeset")
+            elif elem_tag == "relation":
+                elem_id_str = elem.get("id")
+                for child in elem:
+                    if child.tag == "member":
+                        member_id = (child.get("type"), child.get("ref"))
+                        cs_set = elem_to_changesets.get(member_id)
+                        if cs_set:
+                            rel_id = ("relation", elem_id_str)
+                            for cs_id in cs_set:
+                                changesets[cs_id].add(rel_id)
+                                elem_to_changesets[rel_id].add(cs_id)
 
-# Write output XML documents
-start = time.time()
-for (changeset, actions) in changeset_elems.items():
-    tree = ET.ElementTree()
-    root = ET.Element("osm")
-    root.set("version", "0.6")
-    for action in actions:
-        root.append(action)
-    tree._setroot(root)
-    # print(f"writing split file {output_directory}/{changeset}.adiff")
-    with open(f"{output_directory}/{changeset}.adiff", "w") as f:
-        tree.write(f, encoding="unicode")
-        f.write('\n')
-    
-print(f"{time.time() - start:.3f}s to write output files")
+        action.clear()
+
+    del context
+    print(f"{time.time() - start:.3f}s to assign context elements (pass 2)")
+
+    # Pass 3: write output files incrementally
+    start = time.time()
+
+    output_files = {}
+    actions_count = 0
+
+    context = ET.iterparse(adiff_file, events=("end",), tag="action")
+    for _, action in context:
+        action_type = action.get("type")
+        if action_type == "create":
+            new = action[0]
+        else:
+            new = action[1][0]
+
+        elem_id = (new.tag, new.get("id"))
+        cs_set = elem_to_changesets.get(elem_id)
+
+        if cs_set:
+            action_xml = ET.tostring(action, encoding="unicode")
+
+            for cs_id in cs_set:
+                if cs_id not in output_files:
+                    output_files[cs_id] = open(f"{output_directory}/{cs_id}.adiff", "w")
+                    output_files[cs_id].write('<?xml version="1.0" encoding="UTF-8"?>\n<osm version="0.6">\n')
+
+                output_files[cs_id].write(action_xml)
+                output_files[cs_id].write("\n")
+                actions_count += 1
+
+        action.clear()
+
+    del context
+
+    # Close all files
+    for f in output_files.values():
+        f.write("</osm>\n")
+        f.close()
+
+    print(f"{time.time() - start:.3f}s to write {len(output_files)} files, {actions_count} actions (pass 3)")
+
+
+if __name__ == "__main__":
+    main()
