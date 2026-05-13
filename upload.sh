@@ -15,7 +15,6 @@
 # your Cloudflare R2 bucket.
 
 rclone move \
-  --config rclone.conf \
   --progress --no-traverse \
   --header-upload "Content-Type: application/xml" \
   --header-upload "Content-Encoding: gzip"\
